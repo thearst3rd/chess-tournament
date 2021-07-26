@@ -124,8 +124,8 @@ class Stockfish(UciEngineStrategy):
 	def __init__(self, limit = 18):
 		super().__init__("stockfish", limit)
 
-# Gnuchess
-class Gnuchess(UciEngineStrategy):
+# GNU Chess
+class GnuChess(UciEngineStrategy):
 	def __init__(self, limit = 10):
 		super().__init__("gnuchessu", limit)
 		self.engine.configure({"Hash": 1024})
