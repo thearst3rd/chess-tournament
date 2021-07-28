@@ -17,6 +17,8 @@ Worstfish | Uses Stockfish at depth 10 to play the worst possible move | *Engine
 LightSquares | Prefers moving its pieces onto light squares
 DarkSquares | Same as above but for dark squares
 Equalizer | Will move the piece that has moved the least number of times onto a square that has been visited the least number of times. Fewer moves takes priority over less visited squares | *Stateful*
+Swarm | Moves pieces as close as possible to its enemy's king
+Huddle | Moves pieces as close as possible to its own king
 
 ## How to use the framework
 

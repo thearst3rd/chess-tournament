@@ -299,3 +299,34 @@ class Equalizer(Strategy):
 				square = chess.square(file, rank)
 				print("{:2d}".format(self.black_visited[square]), end = " ")
 			print()
+
+class SwarmSquare(EvalPositionStrategy):
+	def evaluate(self, board: chess.Board):
+		our_color = not board.turn
+
+		our_pieces  = board.pieces(chess.PAWN,   our_color)
+		our_pieces |= board.pieces(chess.KNIGHT, our_color)
+		our_pieces |= board.pieces(chess.BISHOP, our_color)
+		our_pieces |= board.pieces(chess.ROOK,   our_color)
+		our_pieces |= board.pieces(chess.QUEEN,  our_color)
+		our_pieces |= board.pieces(chess.KING,   our_color)
+
+		target_square = self.get_target(board)
+
+		dist = 0
+		for piece in our_pieces:
+			dist += chess.square_distance(piece, target_square)
+
+		return -dist
+
+	def get_target(self, board: chess.Board) -> chess.Square:
+		# Returns the square to which this strategy should swarm
+		raise NotImplementedError
+
+class Swarm(SwarmSquare):
+	def get_target(self, board: chess.Board) -> chess.Square:
+		return board.king(board.turn)
+
+class Huddle(SwarmSquare):
+	def get_target(self, board: chess.Board) -> chess.Square:
+		return board.king(not board.turn)
