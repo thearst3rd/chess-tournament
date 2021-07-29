@@ -66,6 +66,18 @@ The game will be printed in PGN format as it unfolds.
 
 When it is your turn, it will ask for your moves which you can enter in SAN or UCI format.
 
+## UCI-ifier
+
+Using `uci-ify.py`, you can run a strat as a simple UCI engine! To use a specific strat, either run with a strat name as a parameter:
+
+```
+./uci-ify.py Swarm
+```
+
+Or, set the option `Strategy` to the strat you want to use in your UCI-compatible GUI of choice.
+
+**WARNING:** Stateful strats can be finnicky. I do not recommend using the UCI-ifier to play against Equalizer at the moment, especially if your GUI program adds an opening book (because then Equalizer won't know about those moves and will almost always crash... I have some solutions in mind but they aren't very good)
+
 ## Some TODOs
 
 As I stated earlier, these strategies are inspired by Tom 7, and some of those strategies were very interesting (such as the blindfolded strats), and I want to get as many of those implemented as possible.

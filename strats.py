@@ -20,16 +20,6 @@ class Strategy:
 		# Here a stateful strategy can initialize its state
 		pass
 
-	def get_name(self):
-		# Returns the name of the strategy. As a default, return a pretty printed version of the class name
-		# To split a camel case string, I used code from here:
-		# https://stackoverflow.com/questions/29916065/how-to-do-camelcase-split-in-python
-		name = type(self).__name__
-		splitted = re.sub('([A-Z][a-z]+)', r' \1', re.sub('([A-Z]+)', r' \1', name)).split()
-		if splitted[-1] == "Strategy":
-			del splitted[-1] 	# Remove the word "Strategy"
-		return " ".join(splitted)
-
 	def get_move(self, board: chess.Board) -> chess.Move:
 		# Here is the code in which a strategy will determine which move it would play on the current board
 		# NOTE: If this strategy is stateful, it should NOT update its state here, rather in update_state
@@ -224,7 +214,11 @@ class Equalizer(Strategy):
 		return random.choice(candidates)
 
 	def update_state(self, board: chess.Board):
-		move = board.pop()
+		try:
+			move = board.pop()
+		except IndexError:
+			# We're at the beginning of the move stack, don't do anything
+			return
 
 		if board.turn == chess.WHITE:
 			moved = self.white_moved
