@@ -76,7 +76,7 @@ Using `uci-ify.py`, you can run a strat as a simple UCI engine! To use a specifi
 
 Or, set the option `Strategy` to the strat you want to use in your UCI-compatible GUI of choice.
 
-**WARNING:** Stateful strats can be finnicky. I do not recommend using the UCI-ifier to play against Equalizer at the moment, especially if your GUI program adds an opening book (because then Equalizer won't know about those moves and will almost always crash... I have some solutions in mind but they aren't very good)
+**Note on stateful strategies:** Stateful strats are interesting because the UCI protocol is inheriently stateless. Each move is sent via a new position command and that sets the internal state of the board - moves are not built on top of previous moves. For that reason, stateless strats are basically reset on each position command, and then the entire game is replayed to rebuild that strat's state.
 
 ## Some TODOs
 

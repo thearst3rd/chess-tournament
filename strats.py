@@ -13,11 +13,12 @@ import chess.engine
 
 # Base for all strategies
 class Strategy:
-	def __init__(self):
-		self.setup()
+	def __init__(self, **kwargs):
+		self.full_setup(**kwargs)
 
-	def setup(self):
-		# Here a stateful strategy can initialize its state
+	def setup(self, **kwargs):
+		# Here a stateful strategy can initialize its state, which can use the board state if available in
+		# kwargs["board"]
 		pass
 
 	def get_move(self, board: chess.Board) -> chess.Move:
@@ -31,6 +32,25 @@ class Strategy:
 		# Here strategy can update its state based on the move that was played. Only the resulting board is given: the
 		# last move can be obtained with board.peek()
 		pass
+
+	def full_setup(self, **kwargs):
+		# This method runs the setup method on the _initial_ state of a chess.Board, then runs update_state on each
+		# individual move in the move stack, basically catching the strategy fully up to speed
+		if "board" not in kwargs:
+			self.setup(**kwargs)
+			return
+
+		board = kwargs["board"]
+
+		inverse_move_stack = []
+		while len(board.move_stack) > 0:
+			inverse_move_stack.append(board.pop())
+
+		self.setup(**kwargs)
+
+		while (len(inverse_move_stack) > 0):
+			board.push(inverse_move_stack.pop())
+			self.update_state(board)
 
 # A type of strategy where it will evaluate the resulting positions of each legal move, and choose the move with the
 # highest evaluation. The function "evaluate" must be implemented
@@ -56,7 +76,7 @@ class EvalPositionStrategy(Strategy):
 		raise NotImplementedError
 
 class UciEngineStrategy(Strategy):
-	def __init__(self, engine_name: str, limit):
+	def __init__(self, engine_name: str, limit, **kwargs):
 		self.engine = chess.engine.SimpleEngine.popen_uci(engine_name)
 
 		# "limit" can either be a chess.engine.Limit, or an integer depth value
@@ -65,7 +85,7 @@ class UciEngineStrategy(Strategy):
 		else:
 			self.limit = chess.engine.Limit(depth = limit)
 
-		super().__init__()
+		super().__init__(**kwargs)
 
 	def get_move(self, board: chess.Board) -> chess.Move:
 		result = self.engine.play(board, self.limit)
@@ -111,21 +131,21 @@ class SuicideKing(EvalPositionStrategy):
 
 # Stockfish
 class Stockfish(UciEngineStrategy):
-	def __init__(self, limit = 18):
-		super().__init__("stockfish", limit)
+	def __init__(self, limit = 18, **kwargs):
+		super().__init__("stockfish", limit, **kwargs)
 
 # GNU Chess
 class GnuChess(UciEngineStrategy):
-	def __init__(self, limit = 10):
-		super().__init__("gnuchessu", limit)
+	def __init__(self, limit = 10, **kwargs):
+		super().__init__("gnuchessu", limit, **kwargs)
 		self.engine.configure({"Hash": 1024})
 
 # Uses stockfish to play the worst possible move. Note that this derives from EvalPositionStrategy rather than
 # UciEngineStrategy since it needs to get a score for all positions (including the bad ones)
 class Worstfish(EvalPositionStrategy):
-	def __init__(self):
+	def __init__(self, **kwargs):
 		self.engine = chess.engine.SimpleEngine.popen_uci("stockfish")
-		super().__init__()
+		super().__init__(**kwargs)
 
 	def __del__(self):
 		self.engine.quit()
@@ -136,13 +156,13 @@ class Worstfish(EvalPositionStrategy):
 		return score
 
 class LightOrDarkSquares(EvalPositionStrategy):
-	def __init__(self, target_color: chess.Color = None):
+	def __init__(self, target_color: chess.Color = None, **kwargs):
 		if target_color is None:
 			self.target_color = random.choice([chess.WHITE, chess.BLACK])
 		else:
 			self.target_color = target_color
 
-		super().__init__()
+		super().__init__(**kwargs)
 
 	def evaluate(self, board: chess.Board):
 		our_color = not board.turn
@@ -159,16 +179,16 @@ class LightOrDarkSquares(EvalPositionStrategy):
 		return len(our_pieces & color_mask)
 
 class LightSquares(LightOrDarkSquares):
-	def __init__(self):
-		super().__init__(chess.WHITE)
+	def __init__(self, **kwargs):
+		super().__init__(chess.WHITE, **kwargs)
 
 class DarkSquares(LightOrDarkSquares):
-	def __init__(self):
-		super().__init__(chess.BLACK)
+	def __init__(self, **kwargs):
+		super().__init__(chess.BLACK, **kwargs)
 
 # Moves a piece that has been moved the least amount of times to a square visited the least amount of times
 class Equalizer(Strategy):
-	def setup(self):
+	def setup(self, **kwargs):
 		# We don't know if we're playing as white or black, so just keep copies of both. Might be better if I can find a
 		# nice way to inform the strategy what color it's playing
 
@@ -177,13 +197,38 @@ class Equalizer(Strategy):
 		self.black_moved = [None] * 64
 		self.black_visited = [0] * 64
 
-		for i in range(16):
-			# First and second rank contain white pieces
-			self.white_moved[i] = 0
-			self.white_visited[i] = 1
-			# 7th and 8th ranks contain black pieces
-			self.black_moved[i + 48] = 0
-			self.black_visited[i + 48] = 1
+		if "board" not in kwargs:
+			# Quickly setup initial position rather than the expensive operation below
+			for i in range(16):
+				# First and second rank contain white pieces
+				self.white_moved[i] = 0
+				self.white_visited[i] = 1
+				# 7th and 8th ranks contain black pieces
+				self.black_moved[i + 48] = 0
+				self.black_visited[i + 48] = 1
+			return
+
+		# Tell the strat about each initial piece
+		board = kwargs["board"]
+
+		for color in [chess.WHITE, chess.BLACK]:
+			if color == chess.WHITE:
+				moved = self.white_moved
+				visited = self.white_visited
+			else:
+				moved = self.black_moved
+				visited = self.black_visited
+
+			pieces  = board.pieces(chess.PAWN,   color)
+			pieces |= board.pieces(chess.KNIGHT, color)
+			pieces |= board.pieces(chess.BISHOP, color)
+			pieces |= board.pieces(chess.ROOK,   color)
+			pieces |= board.pieces(chess.QUEEN,  color)
+			pieces |= board.pieces(chess.KING,   color)
+
+			for piece in pieces:
+				moved[piece] = 0
+				visited[piece] = 1
 
 	def get_move(self, board: chess.Board) -> chess.Move:
 		candidates = []

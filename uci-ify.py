@@ -111,16 +111,13 @@ def main():
 					except ValueError:
 						# Ignore and stop parsing moves
 						break
-			strat.update_state(board)
+			strat.full_setup(board = board)
 		elif command[0] == "go":
 			if board.is_game_over():
 				print("bestmove (none)")
 				continue
 			move = strat.get_move(board)
 			print("bestmove " + move.uci())
-			board.push(move)
-			strat.update_state(board)
-			board.pop()
 		elif command[0] == "d":
 			# Debug command, dunno if it's standard but stockfish supports it
 			print(board)
