@@ -55,6 +55,9 @@ def main():
 		while "" in command:
 			command.remove("")
 
+		if len(command) == 0:
+			continue
+
 		if command[0] == "uci":
 			print("id name chess-tournament")
 			print("id author thearst3rd")
