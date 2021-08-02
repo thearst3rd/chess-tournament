@@ -75,7 +75,8 @@ def main():
 			# Nothing to do
 			pass
 		elif command[0] == "ucinewgame":
-			strat.setup()
+			# Nothing to do
+			pass
 		elif command[0] == "setoption":
 			if len(command) < 5 or command[1] != "name":
 				print("Bad setoption")
@@ -91,15 +92,16 @@ def main():
 				print("Unknown strat " + command[4])
 				continue
 			strat = new_strat
+			strat.full_setup(board = board)
 		elif command[0] == "position":
 			if command[1] == "startpos":
 				moves_start = 2
-				board = chess.Board()
+				board.reset()
 			elif command[1] == "fen":
 				moves_start = 8
 				try:
 					fen_str = " ".join(command[2:8])
-					board = chess.Board(fen_str)
+					board.set_fen(fen_str)
 				except:
 					print("Bad fen")
 					continue
@@ -130,4 +132,8 @@ def main():
 			print("Unknown command: " + command[0])
 
 if __name__ == "__main__":
-	main()
+	try:
+		main()
+	except KeyboardInterrupt:
+		# Gracefully exit
+		pass

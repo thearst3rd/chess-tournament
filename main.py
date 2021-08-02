@@ -17,6 +17,7 @@ strat1 = RandomMove()
 strat2 = RandomMove()
 
 def run_game():
+	global board
 	board = chess.Board()
 	continue_game()
 
@@ -27,7 +28,7 @@ def continue_game():
 
 def do_game_loop():
 	if board.turn == chess.BLACK and not board.is_game_over() and not isinstance(strat2, Human):
-		print(board.fullmove_number)
+		print(board.fullmove_number, end = "... ")
 	while not board.is_game_over():
 		strat = strat1 if board.turn == chess.WHITE else strat2
 		move = strat.get_move(board)
