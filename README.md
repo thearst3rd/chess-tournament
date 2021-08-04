@@ -19,6 +19,8 @@ DarkSquares | Same as above but for dark squares
 Equalizer | Will move the piece that has moved the least number of times onto a square that has been visited the least number of times. Fewer moves takes priority over less visited squares | *Stateful*
 Swarm | Moves pieces as close as possible to its enemy's king
 Huddle | Moves pieces as close as possible to its own king
+LightSquaresHardMode | Prefers moving its pieces onto light squares, but will let Stockfish choose which move to play out of the moves that maximize light squares | *Engine*
+DarkSquaresHardMode | Same as above but for dark squares | *Engine*
 
 ## How to use the framework
 

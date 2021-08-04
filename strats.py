@@ -369,3 +369,65 @@ class Swarm(SwarmSquare):
 class Huddle(SwarmSquare):
 	def get_target(self, board: chess.Board) -> chess.Square:
 		return board.king(not board.turn)
+
+# Run stockfish evaluation, but only consider moves with the highest amount of light or dark squares
+class LightOrDarkSquaresHardMode(Strategy):
+	def __init__(self, target_color: chess.Color = None, limit = 18, **kwargs):
+		self.engine = chess.engine.SimpleEngine.popen_uci("stockfish")
+
+		if target_color is None:
+			self.target_color = random.choice([chess.WHITE, chess.BLACK])
+		else:
+			self.target_color = target_color
+
+		# "limit" can either be a chess.engine.Limit, or an integer depth value
+		if isinstance(limit, chess.engine.Limit):
+			self.limit = limit
+		else:
+			self.limit = chess.engine.Limit(depth = limit)
+
+		super().__init__(**kwargs)
+
+	def __del__(self):
+		self.engine.quit()
+
+	def get_move(self, board: chess.Board) -> chess.Move:
+		candidates = []
+		best_eval = -math.inf
+
+		for move in list(board.legal_moves):
+			board.push(move)
+			current_eval = self.evaluate(board)
+			board.pop()
+
+			if current_eval > best_eval:
+				candidates = [move]
+				best_eval = current_eval
+			elif current_eval == best_eval:
+				candidates.append(move)
+
+		# Run Stockfish, but only consider moves with the highest square color count
+		result = self.engine.play(board, self.limit, root_moves = candidates)
+		return result.move
+
+	def evaluate(self, board: chess.Board):
+		our_color = not board.turn
+
+		our_pieces  = board.pieces(chess.PAWN,   our_color)
+		our_pieces |= board.pieces(chess.KNIGHT, our_color)
+		our_pieces |= board.pieces(chess.BISHOP, our_color)
+		our_pieces |= board.pieces(chess.ROOK,   our_color)
+		our_pieces |= board.pieces(chess.QUEEN,  our_color)
+		our_pieces |= board.pieces(chess.KING,   our_color)
+
+		color_mask = chess.BB_LIGHT_SQUARES if self.target_color == chess.WHITE else chess.BB_DARK_SQUARES
+
+		return len(our_pieces & color_mask)
+
+class LightSquaresHardMode(LightOrDarkSquaresHardMode):
+	def __init__(self, depth = 18, **kwargs):
+		super().__init__(chess.WHITE, depth, **kwargs)
+
+class DarkSquaresHardMode(LightOrDarkSquaresHardMode):
+	def __init__(self, depth = 18, **kwargs):
+		super().__init__(chess.BLACK, depth, **kwargs)

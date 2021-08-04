@@ -6,8 +6,21 @@ import chess
 
 from strats import *
 
-strat_list = [RandomMove, MinResponses, SuicideKing, Stockfish, GnuChess, Worstfish, LightSquares, DarkSquares,
-		Equalizer, Swarm, Huddle]
+strat_list = [
+	RandomMove,
+	MinResponses,
+	SuicideKing,
+	Stockfish,
+	GnuChess,
+	Worstfish,
+	LightSquares,
+	DarkSquares,
+	Equalizer,
+	Swarm,
+	Huddle,
+	LightSquaresHardMode,
+	DarkSquaresHardMode,
+]
 
 def print_usage():
 	print("Usage:")
