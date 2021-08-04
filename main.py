@@ -27,7 +27,8 @@ def continue_game():
 	do_game_loop()
 
 def do_game_loop():
-	if board.turn == chess.BLACK and not board.is_game_over() and not isinstance(strat2, Human):
+	human_players = isinstance(strat1, Human) or isinstance(strat2, Human)
+	if board.turn == chess.BLACK and not board.is_game_over() and not human_players:
 		print(board.fullmove_number, end = "... ")
 	while not board.is_game_over():
 		strat = strat1 if board.turn == chess.WHITE else strat2
@@ -35,7 +36,7 @@ def do_game_loop():
 		if move is None:
 			return
 
-		if isinstance(strat1, Human) or isinstance(strat2, Human):
+		if human_players:
 			print(board.fullmove_number, end = (".   " if board.turn == chess.WHITE else "... "))
 			print(board.san(move))
 		else:

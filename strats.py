@@ -104,13 +104,13 @@ class Human(Strategy):
 	def get_move(self, board: chess.Board) -> chess.Move:
 		try:
 			input_str = input("Enter move >> ")
-			if input_str == "quit":
+			if input_str == "quit" or input_str == "exit":
 				return None
 			move = board.parse_san(input_str)
 			return move
 		except ValueError:
 			print("Invalid move")
-			return self.get_move()
+			return self.get_move(board)
 
 # Simple random strategy
 class RandomMove(Strategy):
