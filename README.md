@@ -2,7 +2,7 @@
 
 This repository is a collection of chess strategies, as well as a small framework for playing against them in the python interactive mode.
 
-These strategies are largely inspired by [Tom 7's various chess shenanigans](tom7.org/chess). After watching his Elo World video, I wanted to play against some of the chess players myself, but didn't feel like figuring out how to compile his C++ code and get all that working. So rather, I decided to reimplement parts of it in Python and use nice pre-existing libraries to do the heavy lifting.
+These strategies are largely inspired by [Tom 7's various chess shenanigans](http://tom7.org/chess/). After watching his Elo World video, I wanted to play against some of the chess players myself, but didn't feel like figuring out how to compile his C++ code and get all that working. So rather, I decided to reimplement parts of it in Python and use nice pre-existing libraries to do the heavy lifting.
 
 ## The Strategies
 
