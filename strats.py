@@ -21,9 +21,12 @@ class Strategy:
 		# kwargs["board"]
 		pass
 
-	def get_move(self, board: chess.Board) -> chess.Move:
+	def get_move(self, board: chess.Board, **kwargs) -> chess.Move:
 		# Here is the code in which a strategy will determine which move it would play on the current board
 		# NOTE: If this strategy is stateful, it should NOT update its state here, rather in update_state
+
+		# kwargs can contain "limit" containing a chess.engine.Limit, or "root_moves" containing a list of
+		# chess.Move. These can influence the strategy's play
 
 		# This method MUST be overwritten
 		raise NotImplementedError
@@ -55,7 +58,7 @@ class Strategy:
 # A type of strategy where it will evaluate the resulting positions of each legal move, and choose the move with the
 # highest evaluation. The function "evaluate" must be implemented
 class EvalPositionStrategy(Strategy):
-	def get_move(self, board: chess.Board) -> chess.Move:
+	def get_move(self, board: chess.Board, **kwargs) -> chess.Move:
 		candidates = []
 		best_eval = -math.inf
 
@@ -87,8 +90,18 @@ class UciEngineStrategy(Strategy):
 
 		super().__init__(**kwargs)
 
-	def get_move(self, board: chess.Board) -> chess.Move:
-		result = self.engine.play(board, self.limit)
+	def get_move(self, board: chess.Board, **kwargs) -> chess.Move:
+		limit = self.limit
+		# Create overlayed limit
+		if "limit" in kwargs:
+			limit = chess.engine.Limit()
+			overlay_limit = kwargs["limit"]
+			for attr in ["time", "depth", "nodes", "mate", "white_clock", "black_clock", "white_inc", "black_inc",
+					"remaining_moves"]:
+				overlay_attr = getattr(overlay_limit, attr)
+				setattr(limit, attr, overlay_attr if (overlay_attr is not None) else getattr(self.limit, attr))
+
+		result = self.engine.play(board, limit)
 		return result.move
 
 	def __del__(self):
@@ -101,7 +114,7 @@ class UciEngineStrategy(Strategy):
 
 # Human player class, reads moves from stdin
 class Human(Strategy):
-	def get_move(self, board: chess.Board) -> chess.Move:
+	def get_move(self, board: chess.Board, **kwargs) -> chess.Move:
 		try:
 			input_str = input("Enter move >> ")
 			if input_str == "quit" or input_str == "exit":
@@ -110,11 +123,11 @@ class Human(Strategy):
 			return move
 		except ValueError:
 			print("Invalid move")
-			return self.get_move(board)
+			return self.get_move(board, **kwargs)
 
 # Simple random strategy
 class RandomMove(Strategy):
-	def get_move(self, board: chess.Board) -> chess.Move:
+	def get_move(self, board: chess.Board, **kwargs) -> chess.Move:
 		return random.choice(list(board.legal_moves))
 
 # Plays a move that gives the opponent the least possible responses
@@ -230,7 +243,7 @@ class Equalizer(Strategy):
 				moved[piece] = 0
 				visited[piece] = 1
 
-	def get_move(self, board: chess.Board) -> chess.Move:
+	def get_move(self, board: chess.Board, **kwargs) -> chess.Move:
 		candidates = []
 		least_moved_count = math.inf
 		least_visited_count = math.inf
@@ -371,6 +384,7 @@ class Huddle(SwarmSquare):
 		return board.king(not board.turn)
 
 # Run stockfish evaluation, but only consider moves with the highest amount of light or dark squares
+# TODO - tweak to use UciEngineStrategy as a base class
 class LightOrDarkSquaresHardMode(Strategy):
 	def __init__(self, target_color: chess.Color = None, limit = 18, **kwargs):
 		self.engine = chess.engine.SimpleEngine.popen_uci("stockfish")
@@ -391,7 +405,7 @@ class LightOrDarkSquaresHardMode(Strategy):
 	def __del__(self):
 		self.engine.quit()
 
-	def get_move(self, board: chess.Board) -> chess.Move:
+	def get_move(self, board: chess.Board, **kwargs) -> chess.Move:
 		candidates = []
 		best_eval = -math.inf
 

@@ -134,7 +134,51 @@ def main():
 			if board.is_game_over():
 				print("bestmove (none)")
 				continue
-			move = strat.get_move(board)
+
+			# Parse commands
+			curr_token_index = 1
+			limit = None
+			root_moves = None
+			while curr_token_index < len(command):
+				token = command[curr_token_index]
+				tokens_left = len(command) - curr_token_index
+				# 'ponder' and 'infinite' not supported
+				if token == "searchmoves":
+					# TODO
+					pass
+				elif token in ["wtime", "btime", "winc", "binc", "movestogo", "depth", "nodes", "mate", "movetime"]:
+					if tokens_left >= 1:
+						if limit is None:
+							limit = chess.engine.Limit()
+						num = int(command[curr_token_index + 1])
+						if token == "wtime":
+							limit.white_clock = float(num) / 1000.0
+						elif token == "btime":
+							limit.black_clock = float(num) / 1000.0
+						elif token == "winc":
+							limit.white_inc = float(num) / 1000.0
+						elif token == "binc":
+							limit.black_inc = float(num) / 1000.0
+						elif token == "movestogo":
+							limit.remaining_moves = num
+						elif token == "depth":
+							limit.depth = num
+						elif token == "nodes":
+							limit.nodes = num
+						elif token == "mate":
+							limit.mate = num
+						elif token == "movetime":
+							limit.time = float(num) / 1000.0
+						curr_token_index += 1
+				curr_token_index += 1
+
+			kwargs = {}
+			if limit is not None:
+				kwargs["limit"] = limit
+			if root_moves is not None:
+				kwargs["root_moves"] = root_moves
+
+			move = strat.get_move(board, **kwargs)
 			print("bestmove " + move.uci())
 		elif command[0] == "d":
 			# Debug command, dunno if it's standard but stockfish supports it
