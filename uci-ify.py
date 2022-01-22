@@ -144,8 +144,18 @@ def main():
 				tokens_left = len(command) - curr_token_index
 				# 'ponder' and 'infinite' not supported
 				if token == "searchmoves":
-					# TODO
-					pass
+					board_moves_uci = []
+					root_moves = []
+					for move in list(board.legal_moves):
+						board_moves_uci.append(board.uci(move))
+					curr_token_index += 1
+					while curr_token_index < len(command):
+						if command[curr_token_index] in board_moves_uci:
+							root_moves.append(chess.Move.from_uci(command[curr_token_index]))
+							curr_token_index += 1
+						else:
+							curr_token_index -= 1
+							break
 				elif token in ["wtime", "btime", "winc", "binc", "movestogo", "depth", "nodes", "mate", "movetime"]:
 					if tokens_left >= 1:
 						if limit is None:

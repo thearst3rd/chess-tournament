@@ -62,7 +62,13 @@ class EvalPositionStrategy(Strategy):
 		candidates = []
 		best_eval = -math.inf
 
-		for move in list(board.legal_moves):
+		root_moves = None
+		if "root_moves" in kwargs:
+			root_moves = kwargs["root_moves"]
+		else:
+			root_moves = list(board.legal_moves)
+
+		for move in root_moves:
 			board.push(move)
 			current_eval = self.evaluate(board)
 			board.pop()
@@ -101,7 +107,10 @@ class UciEngineStrategy(Strategy):
 				overlay_attr = getattr(overlay_limit, attr)
 				setattr(limit, attr, overlay_attr if (overlay_attr is not None) else getattr(self.limit, attr))
 
-		result = self.engine.play(board, limit)
+		root_moves = None
+		if "root_moves" in kwargs:
+			root_moves = kwargs["root_moves"]
+		result = self.engine.play(board, limit, root_moves = root_moves)
 		return result.move
 
 	def __del__(self):
@@ -128,7 +137,12 @@ class Human(Strategy):
 # Simple random strategy
 class RandomMove(Strategy):
 	def get_move(self, board: chess.Board, **kwargs) -> chess.Move:
-		return random.choice(list(board.legal_moves))
+		root_moves = None
+		if "root_moves" in kwargs:
+			root_moves = kwargs["root_moves"]
+		else:
+			root_moves = list(board.legal_moves)
+		return random.choice(root_moves)
 
 # Plays a move that gives the opponent the least possible responses
 class MinResponses(EvalPositionStrategy):
@@ -255,7 +269,13 @@ class Equalizer(Strategy):
 			moved = self.black_moved
 			visited = self.black_visited
 
-		for move in list(board.legal_moves):
+		root_moves = None
+		if "root_moves" in kwargs:
+			root_moves = kwargs["root_moves"]
+		else:
+			root_moves = list(board.legal_moves)
+
+		for move in root_moves:
 			moved_count = moved[move.from_square]
 			visited_count = visited[move.to_square]
 			if moved_count < least_moved_count:
@@ -409,7 +429,13 @@ class LightOrDarkSquaresHardMode(Strategy):
 		candidates = []
 		best_eval = -math.inf
 
-		for move in list(board.legal_moves):
+		root_moves = None
+		if "root_moves" in kwargs:
+			root_moves = kwargs["root_moves"]
+		else:
+			root_moves = list(board.legal_moves)
+
+		for move in root_moves:
 			board.push(move)
 			current_eval = self.evaluate(board)
 			board.pop()
