@@ -404,26 +404,14 @@ class Huddle(SwarmSquare):
 		return board.king(not board.turn)
 
 # Run stockfish evaluation, but only consider moves with the highest amount of light or dark squares
-# TODO - tweak to use UciEngineStrategy as a base class
-class LightOrDarkSquaresHardMode(Strategy):
+class LightOrDarkSquaresHardMode(Stockfish):
 	def __init__(self, target_color: chess.Color = None, limit = 18, **kwargs):
-		self.engine = chess.engine.SimpleEngine.popen_uci("stockfish")
-
 		if target_color is None:
 			self.target_color = random.choice([chess.WHITE, chess.BLACK])
 		else:
 			self.target_color = target_color
 
-		# "limit" can either be a chess.engine.Limit, or an integer depth value
-		if isinstance(limit, chess.engine.Limit):
-			self.limit = limit
-		else:
-			self.limit = chess.engine.Limit(depth = limit)
-
 		super().__init__(**kwargs)
-
-	def __del__(self):
-		self.engine.quit()
 
 	def get_move(self, board: chess.Board, **kwargs) -> chess.Move:
 		candidates = []
@@ -447,8 +435,8 @@ class LightOrDarkSquaresHardMode(Strategy):
 				candidates.append(move)
 
 		# Run Stockfish, but only consider moves with the highest square color count
-		result = self.engine.play(board, self.limit, root_moves = candidates)
-		return result.move
+		kwargs["root_moves"] = candidates
+		return super().get_move(board, **kwargs)
 
 	def evaluate(self, board: chess.Board):
 		our_color = not board.turn
