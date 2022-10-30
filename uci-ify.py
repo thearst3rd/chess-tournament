@@ -20,6 +20,7 @@ strat_list = [
 	Huddle,
 	LightSquaresHardMode,
 	DarkSquaresHardMode,
+	Possessed,
 ]
 
 def print_usage():

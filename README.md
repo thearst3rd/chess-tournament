@@ -21,6 +21,7 @@ Swarm | Moves pieces as close as possible to its enemy's king
 Huddle | Moves pieces as close as possible to its own king
 LightSquaresHardMode | Prefers moving its pieces onto light squares, but will let Stockfish choose which move to play out of the moves that maximize light squares | *Engine*
 DarkSquaresHardMode | Same as above but for dark squares | *Engine*
+Possessed | Uses Stockfish, but once a piece has moved, that piece is "possessed" and will continue to be moved until it is captured or has no legal moves | *Engine, Stateful*
 
 ## How to use the framework
 

@@ -459,3 +459,53 @@ class LightSquaresHardMode(LightOrDarkSquaresHardMode):
 class DarkSquaresHardMode(LightOrDarkSquaresHardMode):
 	def __init__(self, depth = 18, **kwargs):
 		super().__init__(chess.BLACK, depth, **kwargs)
+
+# Uses Stockfish, but once a piece has been moved, that piece is the only piece that can move until it's captured or has
+# no legal moves
+class Possessed(Stockfish):
+	def __init__(self, limit = 18, **kwargs):
+		self.possessed_square_white = None
+		self.possessed_square_black = None
+
+		super().__init__(**kwargs)
+
+	def get_move(self, board: chess.Board, **kwargs) -> chess.Move:
+		possessed_square = self.possessed_square_white if board.turn else self.possessed_square_black
+
+		root_moves = None
+		if "root_moves" in kwargs:
+			root_moves = kwargs["root_moves"]
+		else:
+			root_moves = list(board.legal_moves)
+
+		new_root_moves = None
+		if possessed_square is None:
+			new_root_moves = root_moves
+		else:
+			new_root_moves = []
+			for move in root_moves:
+				if move.from_square == possessed_square:
+					new_root_moves.append(move)
+			if len(new_root_moves) == 0:
+				new_root_moves = root_moves
+
+		kwargs["root_moves"] = new_root_moves
+		return super().get_move(board, **kwargs)
+
+	def update_state(self, board: chess.Board):
+		move = None
+		try:
+			move = board.peek()
+		except IndexError:
+			return
+
+		last_move_color = not board.turn
+
+		if last_move_color == chess.WHITE:
+			self.possessed_square_white = move.to_square
+			if move.to_square == self.possessed_square_black:
+				self.possessed_square_black = None
+		else:
+			self.possessed_square_black = move.to_square
+			if move.to_square == self.possessed_square_white:
+				self.possessed_square_white = None
